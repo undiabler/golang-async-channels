@@ -1,5 +1,5 @@
 // -------------------------
-// Copyright 2015, undiabler
+// Copyright 2016, undiabler
 // git: github.com/undiabler/golang-async-channels
 // http://undiabler.com
 //--------------------------
@@ -11,29 +11,49 @@ import (
 	"time"
 )
 
-var receive = make(chan string)
-var pool = make(chan string)
+type proxy_tube struct {
 
+	chan_from chan interface{}
+	chan_to   chan interface{}
 
-func pooler(messages chan string, job chan string) {
+}
 
-	var item string
+func NewAsyncChannel() (chan_from,chan_to chan interface{}) {
+	
+	//TODO: think about returning proxy_tube struct to avoid memory leaks
+	p := new(proxy_tube)
 
-	var items []string
+	//TODO: maybe sometimes you will want buffered channels for even more amortization
+	p.chan_from = make(chan interface{})
+	p.chan_to = make(chan interface{})
+
+	go p.proxy_worker()
+
+	return p.chan_from,p.chan_to
+}
+
+func (p *proxy_tube) proxy_worker() {
+
+	var item interface{}
+
+	var items []interface{}
 
 	for {
 
-		if item == "" {
+		if item == nil {
 
 			select {
 
-				case tmp := <- messages:
+				case tmp := <- p.chan_from:
 
 			        fmt.Printf("1/received message: %s\n", tmp)		
 
 			        select {
-				        case job <- tmp:
-					        fmt.Printf("1/received message (%s) proxified to job, 0 latency\n", tmp)		
+				        case p.chan_to <- tmp:
+
+					        fmt.Printf("1/received message (%s) proxified to job, 0 latency\n", tmp)
+
+					        continue
 					    default:
 					    	item = tmp
 			        }	
@@ -43,18 +63,18 @@ func pooler(messages chan string, job chan string) {
 
 			select {
 
-			    case tmp := <- messages:
+			    case tmp := <- p.chan_from:
 
 			        fmt.Printf("2/received message: %s, push to long list\n", tmp)
 
 			        items = append(items,item)
 			        item = tmp
 
-			    case job <- item:
+			    case p.chan_to <- item:
 
 			        fmt.Printf("2/send (%s) async to job...\n", item)
 
-			    	item = ""
+			    	item = nil
 
 			        ln := len(items)
 
@@ -76,20 +96,20 @@ const (
 	WORKER_SLEEP = 50
 )
 
-func worker() {
+func worker(pool chan interface{}) {
 	for {
 		tmp := <- pool
-		fmt.Printf("Working on %q...\n", tmp)
+		fmt.Printf("Working on %q...\n", tmp.(string))
 		time.Sleep( WORKER_SLEEP*time.Millisecond )
 	}
 }
 
 func main() {
 
-    go pooler(receive, pool)
+	receive, pool := NewAsyncChannel()
 
     for i := 0; i < WORKERS; i++ {
-	    go worker()
+	    go worker(pool)
     }
 
    	for i := 0; i < 100; i++ {
