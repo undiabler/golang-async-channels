@@ -7,10 +7,62 @@ _Main problem_: Golang has no native concurent queues. But sometimes you have ap
 
 I was inspired by [this article](http://marcio.io/2015/07/handling-1-million-requests-per-minute-with-golang/) and desided to make something like proxy or async channels that can work with unlimited buffer using native language tools without extra locks. 
 
+## Example
+
+```go
+package main
+
+import (
+  "fmt"
+  "time"
+  "github.com/undiabler/golang-async-channels"
+)
+
+const (
+	WORKERS = 10
+	WORKER_SLEEP = 50
+)
+
+func worker(pool chan interface{}) {
+	for {
+		tmp := <- pool
+		fmt.Printf("Working on %q...\n", tmp.(string))
+		time.Sleep( WORKER_SLEEP*time.Millisecond )
+	}
+}
+
+func main() {
+
+	// Send data to receive channel, read from pool
+	receive, pool := gac.NewAsyncChannel()
+
+	// spawn N slow workers
+    for i := 0; i < WORKERS; i++ {
+	    go worker(pool)
+    }
+
+    // send first part of data to channel (will push data to channel with no locks and timeouts)
+   	for i := 0; i < 100; i++ {
+   		receive <- fmt.Sprintf("1-test%d",i)
+   	}
+
+   	// sleep a bit
+   	time.Sleep(1*time.Second)
+
+   	// send second part of data (emulate real situation, no one will wait)
+   	for i := 0; i < 50; i++ {
+   		receive <- fmt.Sprintf("2-test%d",i)
+   	}
+
+   	// avoid termination
+   	time.Sleep(5*time.Second)
+}
+
+```
 
 ### Variables of proxying
 
-#### 1. You workers are fast
+#### 1. Your workers are fast
 
 In this case receiving item will be immidiately placed to job channel:
 ```
@@ -28,9 +80,9 @@ Working on "1-test14"...
 Working on "1-test13"...
 ```
 
-#### 1. You workers are slow
+#### 1. Your workers are slow
 
-In this case, if nobody is listening to job channel, you items will be placed to temp slice, and send to job channel in future.
+In this case, if nobody is listening to job channel, your items will be placed to temp slice, and send to job channel in future.
 ```
 1/received message: 2-test9
 1/received message (2-test9) proxified to job, 0 latency
