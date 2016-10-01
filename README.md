@@ -7,6 +7,8 @@ _Main problem_: Golang has no native concurent queues. But sometimes you have ap
 
 I was inspired by [this article](http://marcio.io/2015/07/handling-1-million-requests-per-minute-with-golang/) and desided to make something like proxy or async channels that can work with unlimited buffer using native language tools without extra locks. 
 
+![alt text](https://raw.githubusercontent.com/undiabler/golang-async-channels/master/gac.png "Explain")
+
 ## Example
 
 ```go
