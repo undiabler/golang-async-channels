@@ -11,6 +11,7 @@ type proxyTube struct {
 	chan_to   chan interface{}
 }
 
+// NewAsyncChannel creates input and output unlimited chans
 func NewAsyncChannel() (chan_from, chan_to chan interface{}) {
 
 	//TODO: think about returning proxyTube struct to avoid memory leaks
@@ -20,12 +21,12 @@ func NewAsyncChannel() (chan_from, chan_to chan interface{}) {
 	p.chan_from = make(chan interface{})
 	p.chan_to = make(chan interface{})
 
-	go p.proxy_worker()
+	go p.proxyWorker()
 
 	return p.chan_from, p.chan_to
 }
 
-func (p *proxyTube) proxy_worker() {
+func (p *proxyTube) proxyWorker() {
 
 	var items []interface{}
 
