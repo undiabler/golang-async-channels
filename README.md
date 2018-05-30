@@ -1,5 +1,10 @@
 ## Async channels 
 
+[![Travis status](https://img.shields.io/travis/undiabler/golang-async-channels.svg)](https://travis-ci.org/undiabler/golang-async-channels) 
+[![Go Report](https://goreportcard.com/badge/github.com/undiabler/golang-async-channels)](https://goreportcard.com/report/github.com/undiabler/golang-async-channels) 
+[![Coverage Status](https://img.shields.io/coveralls/undiabler/golang-async-channels.svg)](https://coveralls.io/github/undiabler/golang-async-channels) 
+![](https://img.shields.io/github/license/undiabler/golang-async-channels.svg)
+
 This package implements some improved channels to golang. 
 
 _Main problem_: Golang has no native concurent queues. But sometimes you have api or other microservice that reacts too long. 
