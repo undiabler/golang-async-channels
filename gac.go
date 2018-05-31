@@ -1,7 +1,6 @@
 // -------------------------
 // Copyright 2016, undiabler
 // git: github.com/undiabler/golang-async-channels
-// http://undiabler.com
 //--------------------------
 
 package gac
