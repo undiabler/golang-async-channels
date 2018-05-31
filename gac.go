@@ -7,23 +7,23 @@
 package gac
 
 type proxyTube struct {
-	chan_from chan interface{}
-	chan_to   chan interface{}
+	chanFrom chan interface{}
+	chanTo   chan interface{}
 }
 
 // NewAsyncChannel creates input and output unlimited chans
-func NewAsyncChannel() (chan_from, chan_to chan interface{}) {
+func NewAsyncChannel() (chanFrom, chanTo chan interface{}) {
 
 	//TODO: think about returning proxyTube struct to avoid memory leaks
 	p := new(proxyTube)
 
 	//TODO: maybe sometimes you will want buffered channels for even more amortization
-	p.chan_from = make(chan interface{})
-	p.chan_to = make(chan interface{})
+	p.chanFrom = make(chan interface{})
+	p.chanTo = make(chan interface{})
 
 	go p.proxyWorker()
 
-	return p.chan_from, p.chan_to
+	return p.chanFrom, p.chanTo
 }
 
 func (p *proxyTube) proxyWorker() {
@@ -32,19 +32,19 @@ func (p *proxyTube) proxyWorker() {
 
 	for {
 
-		items_len := len(items)
+		itemsLen := len(items)
 
-		if items_len == 0 {
+		if itemsLen == 0 {
 
 			select {
 
-			case tmp := <-p.chan_from:
+			case tmp := <-p.chanFrom:
 
 				// fmt.Printf("1/received message: %s\n", tmp)
 
 				select {
 
-				case p.chan_to <- tmp:
+				case p.chanTo <- tmp:
 
 					// fmt.Printf("1/received message (%s) proxified to job, 0 latency\n", tmp)
 
@@ -59,17 +59,17 @@ func (p *proxyTube) proxyWorker() {
 
 			select {
 
-			case tmp := <-p.chan_from:
+			case tmp := <-p.chanFrom:
 
 				// fmt.Printf("2/received message: %s, push to long list\n", tmp)
 
 				items = append(items, tmp)
 
-			case p.chan_to <- items[items_len-1]:
+			case p.chanTo <- items[itemsLen-1]:
 
-				// fmt.Printf("2/send (%s) async to job...\n", items[items_len-1])
+				// fmt.Printf("2/send (%s) async to job...\n", items[itemsLen-1])
 
-				items = items[:items_len-1]
+				items = items[:itemsLen-1]
 
 			}
 
